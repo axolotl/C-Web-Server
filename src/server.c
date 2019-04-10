@@ -93,8 +93,6 @@ void get_d20(int fd)
     char *body;
     asprintf(&body, "<h1>%d</h1>", number);
 
-    printf("%s\n", body);
-
     // Use send_response() to send it back as text/plain data
     send_response(fd, "HTTP/1.1 D20", "text/html", body, strlen(body));
 }
@@ -131,9 +129,25 @@ void resp_404(int fd)
  */
 void get_file(int fd, struct cache *cache, char *request_path)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    // get proper file path
+    char filepath[4096];
+    snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
+    printf("%s", filepath);
+
+    // get file
+    struct file_data *file = file_load(filepath);
+
+    if (file == NULL)
+    {
+        resp_404(fd);
+    }
+    else
+    {
+        char *header;
+        asprintf(&header, "HTTP/1.1 %s", request_path);
+        send_response(fd, header, mime_type_get(filepath), file->data, file->size);
+        file_free(file);
+    }
 }
 
 /**
@@ -188,12 +202,13 @@ void handle_http_request(int fd, struct cache *cache)
         }
         else
         {
-            resp_404(fd);
+            printf("got here\n");
+            get_file(fd, cache, path);
         }
     }
 
-    printf("method: %s\n", method);
-    printf("path: %s\n", path);
+    // printf("method: %s\n", method);
+    // printf("path: %s\n", path);
 }
 
 /**
@@ -201,7 +216,6 @@ void handle_http_request(int fd, struct cache *cache)
  */
 int main(void)
 {
-    printf("made it here\n");
     int newfd;                          // listen on sock_fd, new connection on newfd
     struct sockaddr_storage their_addr; // connector's address information
     char s[INET6_ADDRSTRLEN];
