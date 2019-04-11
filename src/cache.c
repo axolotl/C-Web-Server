@@ -132,6 +132,34 @@ void cache_free(struct cache *cache)
  */
 void cache_put(struct cache *cache, char *path, char *content_type, void *content, int content_length)
 {
+    // allocate and initialize new entry
+    struct cache_entry *new_entry = malloc(sizeof(struct cache_entry));
+    new_entry->path = path;
+    new_entry->content_type = content_type;
+    new_entry->content_length = content_length;
+    new_entry->content = content;
+
+    // insert at head of cache dll
+    dllist_insert_head(cache, new_entry);
+
+    // insert into hash table
+    hashtable_put(cache->index, path, new_entry);
+
+    // increment size of cache
+    cache->cur_size++;
+
+    // check cache size
+    if (cache->cur_size > cache->max_size)
+    {
+        // pop old tail
+        struct cache_entry *old_tail = dllist_remove_tail(cache);
+        // delete from hash table
+        hashtable_delete(cache->index, old_tail->path);
+        // free entry
+        free_entry(old_tail);
+        // update cache cur size
+        cache->cur_size--;
+    }
 }
 
 /**
