@@ -132,22 +132,35 @@ void get_file(int fd, struct cache *cache, char *request_path)
     // get proper file path
     char filepath[4096];
     snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, request_path);
-    printf("%s", filepath);
 
-    // get file
-    struct file_data *file = file_load(filepath);
+    // initialize variables
+    struct file_data *file;
 
-    if (file == NULL)
+    char *header;
+    asprintf(&header, "HTTP/1.1 %s", request_path);
+
+    // try loading the file from cache
+    struct cache_entry *entry = cache_get(cache, request_path);
+    if (entry == NULL)
     {
-        resp_404(fd);
+        // get file
+        file = file_load(filepath);
+        if (file == NULL)
+        {
+            resp_404(fd);
+        }
+        else
+        {
+            char *mime_type = mime_type_get(filepath);
+            cache_put(cache, request_path, mime_type, file->data, file->size);
+        }
     }
     else
     {
-        char *header;
-        asprintf(&header, "HTTP/1.1 %s", request_path);
-        send_response(fd, header, mime_type_get(filepath), file->data, file->size);
-        file_free(file);
+        send_response(fd, header, entry->content_type, entry->content, entry->content_length);
     }
+    // free space allocated for file
+    free(file);
 }
 
 /**
