@@ -154,8 +154,6 @@ void cache_put(struct cache *cache, char *path, char *content_type, void *conten
         hashtable_delete(cache->index, old_tail->path);
         // free entry
         free_entry(old_tail);
-        // update cache cur size
-        cache->cur_size--;
     }
 }
 

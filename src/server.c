@@ -151,12 +151,14 @@ void get_file(int fd, struct cache *cache, char *request_path)
         }
         else
         {
+            printf("not using cache\n");
             char *mime_type = mime_type_get(filepath);
             cache_put(cache, request_path, mime_type, file->data, file->size);
         }
     }
     else
     {
+        printf("using cache\n");
         send_response(fd, header, entry->content_type, entry->content, entry->content_length);
     }
     // free space allocated for file
