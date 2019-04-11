@@ -9,9 +9,12 @@
  */
 struct cache_entry *alloc_entry(char *path, char *content_type, void *content, int content_length)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    struct cache_entry *new_entry = malloc(sizeof(struct cache_entry));
+    new_entry->path = path;
+    new_entry->content_type = content_type;
+    new_entry->content_length = content_length;
+    new_entry->content = content;
+    return new_entry;
 }
 
 /**
@@ -19,9 +22,7 @@ struct cache_entry *alloc_entry(char *path, char *content_type, void *content, i
  */
 void free_entry(struct cache_entry *entry)
 {
-    ///////////////////
-    // IMPLEMENT ME! //
-    ///////////////////
+    free(entry);
 }
 
 /**
@@ -133,11 +134,7 @@ void cache_free(struct cache *cache)
 void cache_put(struct cache *cache, char *path, char *content_type, void *content, int content_length)
 {
     // allocate and initialize new entry
-    struct cache_entry *new_entry = malloc(sizeof(struct cache_entry));
-    new_entry->path = path;
-    new_entry->content_type = content_type;
-    new_entry->content_length = content_length;
-    new_entry->content = content;
+    struct cache_entry *new_entry = alloc_entry(path, content_type, content, content_length);
 
     // insert at head of cache dll
     dllist_insert_head(cache, new_entry);
